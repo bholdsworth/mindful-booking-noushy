@@ -128,7 +128,7 @@ const BookingForm: React.FC = () => {
                 <span className="mr-2 flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-semibold">
                   1
                 </span>
-                Details
+                Details & Date
               </span>
             </TabsTrigger>
             <TabsTrigger value="time" className="data-[state=active]:bg-noushy-500 data-[state=active]:text-white">
@@ -136,7 +136,7 @@ const BookingForm: React.FC = () => {
                 <span className="mr-2 flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-semibold">
                   2
                 </span>
-                Date & Time
+                Time
               </span>
             </TabsTrigger>
             <TabsTrigger value="review" className="data-[state=active]:bg-noushy-500 data-[state=active]:text-white">
@@ -228,6 +228,42 @@ const BookingForm: React.FC = () => {
                     </Select>
                   </div>
                   
+                  {/* Date selection added to details tab */}
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="date">Appointment Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          id="date"
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !formData.date && "text-muted-foreground",
+                            errors.includes("Date is required") ? "border-red-500" : ""
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {formData.date ? format(formData.date, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 pointer-events-auto">
+                        <Calendar
+                          mode="single"
+                          selected={formData.date}
+                          onSelect={handleDateSelect}
+                          disabled={(date) => {
+                            // Disable weekends and past dates
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            return date < today || date.getDay() === 0 || date.getDay() === 6;
+                          }}
+                          initialFocus
+                          className="p-3 pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="notes">Additional Notes (Optional)</Label>
                     <Textarea
@@ -245,7 +281,7 @@ const BookingForm: React.FC = () => {
                     className="bg-noushy-500 hover:bg-noushy-600 text-white transition-colors"
                     onClick={() => handleTabChange("time")}
                   >
-                    Continue to Date & Time
+                    Continue to Select Time
                   </Button>
                 </div>
               </div>
@@ -253,105 +289,67 @@ const BookingForm: React.FC = () => {
             
             <TabsContent value="time" className="mt-8">
               <div className="bg-white rounded-2xl border border-noushy-100 shadow-sm p-6 md:p-8">
-                <h2 className="text-2xl font-semibold mb-6 text-noushy-900">Select Date & Time</h2>
+                <h2 className="text-2xl font-semibold mb-6 text-noushy-900">Select Time</h2>
                 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-noushy-800">Select a Date</h3>
-                    <div className="flex justify-center">
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !formData.date && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {formData.date ? format(formData.date, "PPP") : <span>Pick a date</span>}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 pointer-events-auto">
-                          <Calendar
-                            mode="single"
-                            selected={formData.date}
-                            onSelect={handleDateSelect}
-                            disabled={(date) => {
-                              // Disable weekends and past dates
-                              const today = new Date();
-                              today.setHours(0, 0, 0, 0);
-                              return date < today || date.getDay() === 0 || date.getDay() === 6;
-                            }}
-                            initialFocus
-                            className="p-3 pointer-events-auto"
-                          />
-                        </PopoverContent>
-                      </Popover>
+                <div className="space-y-4">
+                  {/* Selected date display */}
+                  <div className="bg-noushy-50 p-4 rounded-lg mb-6">
+                    <div className="flex items-center">
+                      <CalendarIcon className="h-5 w-5 text-noushy-600 mr-2" />
+                      <span className="font-medium text-noushy-700">
+                        Selected Date: {formData.date ? format(formData.date, "EEEE, MMMM d, yyyy") : ""}
+                      </span>
                     </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium text-noushy-800">Available Time Slots</h3>
+                    {formData.timeSlot && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-noushy-100 text-noushy-800">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {formData.timeSlot.formattedTime}
+                      </span>
+                    )}
                   </div>
                   
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium text-noushy-800">Select a Time</h3>
-                      {formData.timeSlot && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-noushy-100 text-noushy-800">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {formData.timeSlot.formattedTime}
-                        </span>
-                      )}
+                    <div className="bg-noushy-50 rounded-lg p-4">
+                      <h4 className="text-sm font-medium text-noushy-700 mb-2">Morning</h4>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                        {timeSlots
+                          .filter(slot => {
+                            const hour = slot.time.getHours();
+                            return hour >= 7 && hour < 12;
+                          })
+                          .map(slot => (
+                            <TimeSlot
+                              key={slot.id}
+                              slot={slot}
+                              isSelected={formData.timeSlot?.id === slot.id}
+                              onClick={handleTimeSlotSelect}
+                            />
+                          ))}
+                      </div>
                     </div>
                     
-                    {formData.date ? (
-                      <div className="space-y-4">
-                        <div className="bg-noushy-50 rounded-lg p-4">
-                          <h4 className="text-sm font-medium text-noushy-700 mb-2">Morning</h4>
-                          <div className="time-slot-grid">
-                            {timeSlots
-                              .filter(slot => {
-                                const hour = slot.time.getHours();
-                                return hour >= 7 && hour < 12;
-                              })
-                              .map(slot => (
-                                <TimeSlot
-                                  key={slot.id}
-                                  slot={slot}
-                                  isSelected={formData.timeSlot?.id === slot.id}
-                                  onClick={handleTimeSlotSelect}
-                                />
-                              ))}
-                          </div>
-                        </div>
-                        
-                        <div className="bg-noushy-50 rounded-lg p-4">
-                          <h4 className="text-sm font-medium text-noushy-700 mb-2">Afternoon</h4>
-                          <div className="time-slot-grid">
-                            {timeSlots
-                              .filter(slot => {
-                                const hour = slot.time.getHours();
-                                return hour >= 14 && hour < 18;
-                              })
-                              .map(slot => (
-                                <TimeSlot
-                                  key={slot.id}
-                                  slot={slot}
-                                  isSelected={formData.timeSlot?.id === slot.id}
-                                  onClick={handleTimeSlotSelect}
-                                />
-                              ))}
-                          </div>
-                        </div>
+                    <div className="bg-noushy-50 rounded-lg p-4">
+                      <h4 className="text-sm font-medium text-noushy-700 mb-2">Afternoon</h4>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                        {timeSlots
+                          .filter(slot => {
+                            const hour = slot.time.getHours();
+                            return hour >= 14 && hour < 18;
+                          })
+                          .map(slot => (
+                            <TimeSlot
+                              key={slot.id}
+                              slot={slot}
+                              isSelected={formData.timeSlot?.id === slot.id}
+                              onClick={handleTimeSlotSelect}
+                            />
+                          ))}
                       </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-48 border-2 border-dashed border-noushy-200 rounded-lg bg-noushy-50">
-                        <div className="text-center">
-                          <CalendarIcon className="mx-auto h-8 w-8 text-noushy-400" />
-                          <p className="mt-2 text-sm text-noushy-600">
-                            Please select a date first
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                    </div>
                   </div>
                 </div>
                 
@@ -366,7 +364,7 @@ const BookingForm: React.FC = () => {
                   <Button
                     className="bg-noushy-500 hover:bg-noushy-600 text-white transition-colors"
                     onClick={() => handleTabChange("review")}
-                    disabled={!formData.date || !formData.timeSlot}
+                    disabled={!formData.timeSlot}
                   >
                     Continue to Review
                   </Button>
@@ -430,7 +428,7 @@ const BookingForm: React.FC = () => {
                     variant="outline"
                     onClick={() => handleTabChange("time")}
                   >
-                    Back to Date & Time
+                    Back to Select Time
                   </Button>
                   
                   <Button
