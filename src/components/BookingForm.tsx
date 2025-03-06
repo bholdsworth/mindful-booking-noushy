@@ -55,15 +55,17 @@ const BookingForm: React.FC = () => {
   
   // Handle tab change
   const handleTabChange = (value: string) => {
-    // Only check for date if going from details to time
-    if (value === "time" && currentTab === "details" && !formData.date) {
-      // If trying to go to time tab without selecting a date, show error
-      toast({
-        title: "Please select a date first",
-        description: "You need to select a date before choosing a time slot",
-        variant: "destructive",
-      });
-      return;
+    // Only check for date if transitioning from details to time
+    if (value === "time" && currentTab === "details") {
+      // Validate that a date has been selected
+      if (!formData.date) {
+        toast({
+          title: "Please select a date first",
+          description: "You need to select a date before choosing a time slot",
+          variant: "destructive",
+        });
+        return;
+      }
     }
     
     if (value === "review") {
@@ -449,4 +451,3 @@ const BookingForm: React.FC = () => {
 };
 
 export default BookingForm;
-
