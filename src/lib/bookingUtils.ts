@@ -16,6 +16,7 @@ export type BookingFormData = {
   date: Date | undefined;
   timeSlot: TimeSlot | null;
   serviceType: string;
+  medicareCode: string;
   notes: string;
 };
 
@@ -27,6 +28,7 @@ export const initialBookingData: BookingFormData = {
   date: undefined,
   timeSlot: null,
   serviceType: "",
+  medicareCode: "",
   notes: "",
 };
 
@@ -37,6 +39,17 @@ export const serviceTypes = [
   "Pain Management",
   "Post-Surgery Recovery",
   "Injury Assessment"
+];
+
+export const medicareCodes = [
+  { code: "105", description: "Massage Therapy - 60 minutes" },
+  { code: "110", description: "Initial Consultation - 45 minutes" },
+  { code: "115", description: "Follow-up Treatment - 30 minutes" },
+  { code: "120", description: "Extended Treatment - 90 minutes" },
+  { code: "125", description: "Rehabilitation Session - 60 minutes" },
+  { code: "130", description: "Assessment & Planning - 45 minutes" },
+  { code: "135", description: "Group Therapy Session - 60 minutes" },
+  { code: "140", description: "Home Visit Treatment - 60 minutes" }
 ];
 
 // Generate available dates (next 30 days, excluding weekends)
@@ -116,6 +129,7 @@ export const validateBookingData = (data: BookingFormData): string[] => {
   if (!data.date) errors.push("Date is required");
   if (!data.timeSlot) errors.push("Time slot is required");
   if (!data.serviceType) errors.push("Service type is required");
+  if (!data.medicareCode) errors.push("Medicare code is required");
   
   return errors;
 };

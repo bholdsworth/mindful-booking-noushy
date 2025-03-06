@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Clock, Check } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Check, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -21,7 +21,8 @@ import {
   getAvailableDates,
   getTimeSlots,
   validateBookingData,
-  serviceTypes
+  serviceTypes,
+  medicareCodes
 } from "@/lib/bookingUtils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -209,7 +210,7 @@ const BookingForm: React.FC = () => {
                     />
                   </div>
                   
-                  <div className="space-y-2 md:col-span-2">
+                  <div className="space-y-2">
                     <Label htmlFor="serviceType">Service Type</Label>
                     <Select
                       value={formData.serviceType}
@@ -222,6 +223,25 @@ const BookingForm: React.FC = () => {
                         {serviceTypes.map((service) => (
                           <SelectItem key={service} value={service}>
                             {service}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="medicareCode">Medicare Code</Label>
+                    <Select
+                      value={formData.medicareCode}
+                      onValueChange={(value) => handleChange("medicareCode", value)}
+                    >
+                      <SelectTrigger id="medicareCode" className={errors.includes("Medicare code is required") ? "border-red-500" : ""}>
+                        <SelectValue placeholder="Select a Medicare code" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {medicareCodes.map((codeItem) => (
+                          <SelectItem key={codeItem.code} value={codeItem.code}>
+                            {codeItem.code} - {codeItem.description}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -395,6 +415,12 @@ const BookingForm: React.FC = () => {
                       <div className="flex justify-between">
                         <span className="text-noushy-600">Service:</span>
                         <span className="text-noushy-900 font-medium">{formData.serviceType}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-noushy-600">Medicare Code:</span>
+                        <span className="text-noushy-900 font-medium">
+                          {formData.medicareCode} - {medicareCodes.find(c => c.code === formData.medicareCode)?.description}
+                        </span>
                       </div>
                     </div>
                   </div>
