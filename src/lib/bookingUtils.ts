@@ -118,7 +118,8 @@ export const getTimeSlots = (date: Date): TimeSlot[] => {
 };
 
 // Validate booking data
-export const validateBookingData = (data: BookingFormData): string[] => {
+// Added validateMedicareCode parameter with default value of true
+export const validateBookingData = (data: BookingFormData, validateMedicareCode: boolean = true): string[] => {
   const errors: string[] = [];
   
   if (!data.firstName) errors.push("First name is required");
@@ -129,7 +130,9 @@ export const validateBookingData = (data: BookingFormData): string[] => {
   if (!data.date) errors.push("Date is required");
   if (!data.timeSlot) errors.push("Time slot is required");
   if (!data.serviceType) errors.push("Service type is required");
-  if (!data.medicareCode) errors.push("Medicare code is required");
+  
+  // Only validate Medicare code if validateMedicareCode is true
+  if (validateMedicareCode && !data.medicareCode) errors.push("Medicare code is required");
   
   return errors;
 };

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Clock, Check, FileText } from "lucide-react";
@@ -71,7 +70,8 @@ const BookingForm: React.FC = () => {
     
     if (value === "review") {
       // Validate form data before going to review
-      const validationErrors = validateBookingData(formData);
+      // We're removing Medicare code validation since it's hidden from users
+      const validationErrors = validateBookingData(formData, false);
       setErrors(validationErrors);
       
       if (validationErrors.length > 0) {
@@ -89,7 +89,8 @@ const BookingForm: React.FC = () => {
   
   // Handle form submission
   const handleSubmit = () => {
-    const validationErrors = validateBookingData(formData);
+    // We're removing Medicare code validation since it's hidden from users
+    const validationErrors = validateBookingData(formData, false);
     setErrors(validationErrors);
     
     if (validationErrors.length > 0) {
@@ -99,6 +100,11 @@ const BookingForm: React.FC = () => {
         variant: "destructive",
       });
       return;
+    }
+    
+    // Automatically set a default Medicare code for the therapist (first in the list)
+    if (!formData.medicareCode && medicareCodes.length > 0) {
+      handleChange("medicareCode", medicareCodes[0].code);
     }
     
     // In a real application, you would submit the data to your backend here
@@ -229,24 +235,7 @@ const BookingForm: React.FC = () => {
                     </Select>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="medicareCode">Medicare Code</Label>
-                    <Select
-                      value={formData.medicareCode}
-                      onValueChange={(value) => handleChange("medicareCode", value)}
-                    >
-                      <SelectTrigger id="medicareCode" className={errors.includes("Medicare code is required") ? "border-red-500" : ""}>
-                        <SelectValue placeholder="Select a Medicare code" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {medicareCodes.map((codeItem) => (
-                          <SelectItem key={codeItem.code} value={codeItem.code}>
-                            {codeItem.code} - {codeItem.description}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {/* Medicare code field has been removed from the user-facing form */}
                   
                   {/* Date selection added to details tab */}
                   <div className="space-y-2 md:col-span-2">
@@ -416,12 +405,7 @@ const BookingForm: React.FC = () => {
                         <span className="text-noushy-600">Service:</span>
                         <span className="text-noushy-900 font-medium">{formData.serviceType}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-noushy-600">Medicare Code:</span>
-                        <span className="text-noushy-900 font-medium">
-                          {formData.medicareCode} - {medicareCodes.find(c => c.code === formData.medicareCode)?.description}
-                        </span>
-                      </div>
+                      {/* Medicare code has been removed from the user review */}
                     </div>
                   </div>
                   

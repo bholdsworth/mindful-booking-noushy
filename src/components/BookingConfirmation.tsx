@@ -2,8 +2,8 @@
 import React from "react";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, UserCheck, ArrowLeft, FileText } from "lucide-react";
-import { BookingFormData, medicareCodes } from "@/lib/bookingUtils";
+import { Calendar, Clock, UserCheck, ArrowLeft } from "lucide-react";
+import { BookingFormData } from "@/lib/bookingUtils";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -14,8 +14,7 @@ interface BookingConfirmationProps {
 }
 
 const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ booking, onBack }) => {
-  const { firstName, lastName, date, timeSlot, serviceType, medicareCode } = booking;
-  const medicareDescription = medicareCodes.find(c => c.code === medicareCode)?.description || '';
+  const { firstName, lastName, date, timeSlot, serviceType } = booking;
   
   // Animation variants
   const containerVariants = {
@@ -99,7 +98,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ booking, onBa
         </motion.div>
 
         <motion.div 
-          className="flex items-center mb-6 pb-6 border-b border-noushy-100"
+          className="flex items-center"
           variants={itemVariants}
         >
           <div
@@ -116,20 +115,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ booking, onBa
           </div>
         </motion.div>
 
-        <motion.div className="flex items-center" variants={itemVariants}>
-          <div
-            className={cn(
-              "flex items-center justify-center w-12 h-12 rounded-full mr-4",
-              "bg-noushy-50 text-noushy-600"
-            )}
-          >
-            <FileText className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="text-sm text-noushy-500 mb-1">Medicare Code</div>
-            <div className="text-noushy-900 font-medium">{medicareCode} - {medicareDescription}</div>
-          </div>
-        </motion.div>
+        {/* Medicare code information has been removed from the client-facing confirmation */}
       </motion.div>
 
       <motion.div
