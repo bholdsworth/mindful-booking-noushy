@@ -68,8 +68,8 @@ const Index = () => {
                 <div className="absolute -bottom-8 -right-8 w-64 h-64 bg-noushy-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
                 <div className="relative glass rounded-2xl overflow-hidden border border-noushy-100">
                   <img 
-                    src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2340&q=80" 
-                    alt="Physiotherapy session" 
+                    src="https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2340&q=80" 
+                    alt="Female rugby player receiving physiotherapy" 
                     className="w-full h-auto rounded-2xl"
                   />
                 </div>
