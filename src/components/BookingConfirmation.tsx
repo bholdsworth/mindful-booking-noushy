@@ -24,7 +24,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ booking, onBa
   const { firstName, lastName, date, timeSlot, serviceType } = booking;
   const { toast } = useToast();
   
-  const handleCopyCalendarLink = (calendarType: CalendarType) => {
+  const handleCalendarAction = (calendarType: CalendarType) => {
     if (!date || !timeSlot) return;
     
     const links = generateCalendarLinks({
@@ -37,18 +37,30 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ booking, onBa
     
     const link = links[calendarType];
     
-    // Copy to clipboard
-    navigator.clipboard.writeText(link)
-      .then(() => {
-        toast({
-          title: "Link copied",
-          description: `${calendarType} calendar link has been copied to clipboard.`
-        });
-      })
-      .catch(() => {
-        // If clipboard fails, open it in a new tab
-        window.open(link, "_blank");
+    // Open in new tab by default for all calendar types
+    if (calendarType === 'ics') {
+      // For .ics downloads, create and click an invisible link
+      const element = document.createElement('a');
+      element.setAttribute('href', link);
+      element.setAttribute('download', `noushy-appointment-${format(date, 'yyyy-MM-dd')}.ics`);
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+      
+      toast({
+        title: "Calendar file downloaded",
+        description: "The .ics file has been downloaded. Open it to add to your calendar."
       });
+    } else {
+      // For all other calendar types, open in a new tab
+      window.open(link, "_blank");
+      
+      toast({
+        title: "Calendar opening",
+        description: `Opening ${calendarType} calendar in a new tab.`
+      });
+    }
   };
   
   // Animation variants
@@ -174,16 +186,16 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ booking, onBa
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem onClick={() => handleCopyCalendarLink("google")}>
+              <DropdownMenuItem onClick={() => handleCalendarAction("google")}>
                 Google Calendar
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleCopyCalendarLink("outlook")}>
+              <DropdownMenuItem onClick={() => handleCalendarAction("outlook")}>
                 Outlook Calendar
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleCopyCalendarLink("apple")}>
+              <DropdownMenuItem onClick={() => handleCalendarAction("apple")}>
                 Apple Calendar
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleCopyCalendarLink("ics")}>
+              <DropdownMenuItem onClick={() => handleCalendarAction("ics")}>
                 Download .ics file
               </DropdownMenuItem>
             </DropdownMenuContent>
