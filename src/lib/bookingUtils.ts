@@ -1,5 +1,5 @@
 
-import { addDays, format, isWeekend, setHours, setMinutes, isBefore, isAfter } from "date-fns";
+import { addDays, format, isWeekend, setHours, setMinutes, isBefore, isAfter, isSameDay } from "date-fns";
 
 export type TimeSlot = {
   id: string;
@@ -52,16 +52,56 @@ export const medicareCodes = [
   { code: "140", description: "Home Visit Treatment - 60 minutes" }
 ];
 
-// Generate available dates (next 30 days, excluding weekends)
+// Store admin-selected available days
+const STORAGE_KEY = 'noushy-available-days';
+
+// Save available days to localStorage
+export const saveAvailableDays = (days: Date[]) => {
+  const daysToSave = days.map(day => format(day, 'yyyy-MM-dd'));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(daysToSave));
+};
+
+// Get available days from localStorage
+export const getAvailableDays = (): Date[] => {
+  const savedDays = localStorage.getItem(STORAGE_KEY);
+  if (!savedDays) return [];
+  
+  try {
+    const dateStrings = JSON.parse(savedDays) as string[];
+    return dateStrings.map(ds => new Date(ds));
+  } catch (e) {
+    console.error('Error parsing available days:', e);
+    return [];
+  }
+};
+
+// Check if a day is available
+export const isDayAvailable = (day: Date): boolean => {
+  const availableDays = getAvailableDays();
+  return availableDays.some(availableDay => isSameDay(availableDay, day));
+};
+
+// Generate available dates (next 30 days, filtered by admin selection)
 export const getAvailableDates = () => {
   const dates: Date[] = [];
   const today = new Date();
+  const availableDays = getAvailableDays();
   
-  for (let i = 0; i < 30; i++) {
-    const date = addDays(today, i);
-    if (!isWeekend(date)) {
-      dates.push(date);
+  // If no admin-selected days, fall back to weekdays
+  if (availableDays.length === 0) {
+    for (let i = 0; i < 30; i++) {
+      const date = addDays(today, i);
+      if (!isWeekend(date)) {
+        dates.push(date);
+      }
     }
+  } else {
+    // Filter future available days
+    availableDays.forEach(day => {
+      if (isAfter(day, today) || isSameDay(day, today)) {
+        dates.push(day);
+      }
+    });
   }
   
   return dates;
