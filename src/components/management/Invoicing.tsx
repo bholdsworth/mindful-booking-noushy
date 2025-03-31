@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { 
@@ -10,11 +9,12 @@ import {
   CreditCard, 
   CheckCircle, 
   XCircle, 
-  Clock, 
+  Clock,
   MoreHorizontal,
   User,
   CalendarIcon,
-  X
+  X,
+  Eye
 } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -67,8 +67,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import InvoicePreview from "./InvoicePreview";
+import { InvoiceData, BusinessInfo } from "./InvoiceTemplate";
 
-// Mock invoices data
 const invoices = [
   {
     id: "INV-001",
@@ -133,7 +134,6 @@ const invoices = [
   }
 ];
 
-// Summary stats
 const summaryStats = [
   { title: "Total Revenue", value: "$540.00", change: "+12.5%", icon: CreditCard },
   { title: "Pending Payments", value: "$335.00", change: "+3.2%", icon: Clock },
@@ -141,7 +141,6 @@ const summaryStats = [
   { title: "Paid Invoices", value: "$205.00", change: "+18.3%", icon: CheckCircle }
 ];
 
-// Form schema for invoice creation
 const invoiceFormSchema = z.object({
   patientId: z.string().min(1, "Patient is required"),
   issueDate: z.date({
@@ -162,7 +161,6 @@ const invoiceFormSchema = z.object({
 
 type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
 
-// Mock patients for select dropdown
 const mockPatients = [
   { id: "1", name: "Sarah Johnson" },
   { id: "2", name: "Michael Brown" },
@@ -171,7 +169,6 @@ const mockPatients = [
   { id: "5", name: "Sophia Martinez" },
 ];
 
-// Mock services for select dropdown
 const mockServices = [
   { id: "1", name: "Initial Assessment", rate: 120 },
   { id: "2", name: "Follow-up Session", rate: 85 },
@@ -187,6 +184,8 @@ const Invoicing = () => {
   const [invoiceItems, setInvoiceItems] = useState([
     { id: 1, description: "", quantity: 1, rate: 0, total: 0 }
   ]);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<InvoiceData | null>(null);
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
@@ -198,7 +197,6 @@ const Invoicing = () => {
 
   const onSubmit = (data: InvoiceFormValues) => {
     console.log("Form submitted:", data);
-    // Here you would typically send the data to your backend
     setIsCreateDialogOpen(false);
     form.reset();
     setInvoiceItems([{ id: 1, description: "", quantity: 1, rate: 0, total: 0 }]);
@@ -286,6 +284,48 @@ const Invoicing = () => {
     
     return matchesSearch && matchesStatus;
   });
+
+  const businessInfo: BusinessInfo = {
+    name: "Massage Therapy GCCC",
+    practitioner: "Annouska Gregovich",
+    qualification: "Remedial Massage Therapist",
+    address: "123 South Gold Street\nSouthport, Queensland 4215",
+    abn: "45896547635",
+    providerNumber: "C164321"
+  };
+
+  const handleViewInvoice = (invoice: any) => {
+    const formattedInvoice: InvoiceData = {
+      id: invoice.id.replace("INV-", "").padStart(5, "0"),
+      date: invoice.date,
+      dueDate: invoice.dueDate,
+      patientName: invoice.patient,
+      patientAddress: "19 Lily Crescent\nNERANG QLD 4211",
+      items: invoice.items.map((item: any) => ({
+        item: item.description.split(" ")[0],
+        description: item.description,
+        quantity: item.quantity,
+        rate: item.rate,
+        tax: item.rate * 0.1,
+        total: item.total
+      })),
+      payments: [
+        {
+          date: new Date(),
+          method: "EFTPOS",
+          amount: invoice.status === "Paid" ? invoice.amount : 0
+        }
+      ],
+      nextAppointment: {
+        date: new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000),
+        practitioner: "Annouska Gregovich",
+        service: "Massage Therapy"
+      }
+    };
+
+    setSelectedInvoice(formattedInvoice);
+    setIsPreviewOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -703,10 +743,22 @@ const Invoicing = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
-                            <DropdownMenuItem>Mark as Paid</DropdownMenuItem>
-                            <DropdownMenuItem>Send Reminder</DropdownMenuItem>
-                            <DropdownMenuItem>Export PDF</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleViewInvoice(invoice)}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Invoice
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Mark as Paid
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <FileText className="h-4 w-4 mr-2" />
+                              Send Reminder
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Download className="h-4 w-4 mr-2" />
+                              Export PDF
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -718,6 +770,15 @@ const Invoicing = () => {
           </CardContent>
         </Card>
       </motion.div>
+
+      {selectedInvoice && (
+        <InvoicePreview
+          isOpen={isPreviewOpen}
+          onClose={() => setIsPreviewOpen(false)}
+          invoiceData={selectedInvoice}
+          businessInfo={businessInfo}
+        />
+      )}
     </div>
   );
 };
