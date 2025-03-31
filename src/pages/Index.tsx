@@ -1,10 +1,10 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Calendar, Clock, Users, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import GoogleReviews from "@/components/GoogleReviews";
 import { motion } from "framer-motion";
 
 const Index = () => {
@@ -143,6 +143,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+      
+      {/* Google Reviews Section */}
+      <GoogleReviews />
       
       {/* CTA Section */}
       <section className="py-20 bg-noushy-50">

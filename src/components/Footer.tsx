@@ -1,9 +1,13 @@
 
 import { Link } from "react-router-dom";
-import { Instagram, Facebook, Twitter, Mail, Phone, MapPin } from "lucide-react";
+import { Instagram, Facebook, Twitter, Mail, Phone, MapPin, Star } from "lucide-react";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  
+  const handleGoogleReview = () => {
+    window.open("https://www.google.com/maps/search/?api=1&query=noushy+physiotherapy", "_blank");
+  };
 
   return (
     <footer className="bg-noushy-50 border-t border-noushy-100">
@@ -53,6 +57,15 @@ export default function Footer() {
                 <Link to="/about" className="text-noushy-700 hover:text-noushy-500 transition-colors">
                   About Us
                 </Link>
+              </li>
+              <li>
+                <button 
+                  onClick={handleGoogleReview} 
+                  className="text-noushy-700 hover:text-noushy-500 transition-colors flex items-center"
+                >
+                  <Star className="h-4 w-4 mr-1" />
+                  Leave a Review
+                </button>
               </li>
             </ul>
           </div>
