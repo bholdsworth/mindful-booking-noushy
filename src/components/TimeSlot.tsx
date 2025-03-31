@@ -11,13 +11,6 @@ interface TimeSlotProps {
 }
 
 const TimeSlot: React.FC<TimeSlotProps> = ({ slot, isSelected, onClick }) => {
-  // Calculate end time including buffer
-  const totalMinutes = slot.duration + slot.bufferTime;
-  const endTime = new Date(slot.time);
-  endTime.setMinutes(endTime.getMinutes() + totalMinutes);
-  
-  const formattedEndTime = endTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  
   return (
     <button
       className={cn(
@@ -37,7 +30,7 @@ const TimeSlot: React.FC<TimeSlotProps> = ({ slot, isSelected, onClick }) => {
       </div>
       
       <div className="text-xs text-noushy-600">
-        {slot.duration} min + {slot.bufferTime} min buffer
+        {slot.duration} min session
       </div>
       
       {!slot.available && (
