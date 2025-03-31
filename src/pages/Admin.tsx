@@ -21,29 +21,11 @@ const Admin = () => {
     setSelectedDays(savedDays);
   }, []);
 
-  // Handle day selection
-  const handleSelect = (day: Date | undefined) => {
-    if (!day) return;
-
-    setSelectedDays(prev => {
-      // Check if day is already selected
-      const isSelected = prev.some(d => 
-        d.getDate() === day.getDate() && 
-        d.getMonth() === day.getMonth() && 
-        d.getFullYear() === day.getFullYear()
-      );
-
-      // If selected, remove it; otherwise, add it
-      if (isSelected) {
-        return prev.filter(d => 
-          d.getDate() !== day.getDate() || 
-          d.getMonth() !== day.getMonth() || 
-          d.getFullYear() !== day.getFullYear()
-        );
-      } else {
-        return [...prev, day];
-      }
-    });
+  // Handle day selection - modified to accept an array of dates
+  const handleSelect = (days: Date[] | undefined) => {
+    if (days) {
+      setSelectedDays(days);
+    }
   };
 
   // Save available days
@@ -122,7 +104,14 @@ const Admin = () => {
                                 variant="ghost" 
                                 size="sm" 
                                 className="text-noushy-500 hover:text-noushy-700"
-                                onClick={() => handleSelect(day)}
+                                onClick={() => {
+                                  const newSelectedDays = selectedDays.filter(d => 
+                                    d.getDate() !== day.getDate() || 
+                                    d.getMonth() !== day.getMonth() || 
+                                    d.getFullYear() !== day.getFullYear()
+                                  );
+                                  setSelectedDays(newSelectedDays);
+                                }}
                               >
                                 Remove
                               </Button>
