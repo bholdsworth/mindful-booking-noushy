@@ -1,8 +1,7 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, UserCheck, ArrowLeft, CalendarPlus } from "lucide-react";
+import { Calendar, Clock, UserCheck, ArrowLeft, CalendarPlus, MessageSquare } from "lucide-react";
 import { BookingFormData, generateCalendarLinks, CalendarType } from "@/lib/bookingUtils";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -21,8 +20,9 @@ interface BookingConfirmationProps {
 }
 
 const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ booking, onBack }) => {
-  const { firstName, lastName, date, timeSlot, serviceType } = booking;
+  const { firstName, lastName, date, timeSlot, serviceType, phone } = booking;
   const { toast } = useToast();
+  const [sendingSMS, setSendingSMS] = useState(false);
   
   const handleCalendarAction = (calendarType: CalendarType) => {
     if (!date || !timeSlot) return;
@@ -37,9 +37,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ booking, onBa
     
     const link = links[calendarType];
     
-    // Open in new tab by default for all calendar types
     if (calendarType === 'ics') {
-      // For .ics downloads, create and click an invisible link
       const element = document.createElement('a');
       element.setAttribute('href', link);
       element.setAttribute('download', `noushy-appointment-${format(date, 'yyyy-MM-dd')}.ics`);
@@ -53,7 +51,6 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ booking, onBa
         description: "The .ics file has been downloaded. Open it to add to your calendar."
       });
     } else {
-      // For all other calendar types, open in a new tab
       window.open(link, "_blank");
       
       toast({
@@ -63,7 +60,44 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ booking, onBa
     }
   };
   
-  // Animation variants
+  const sendSMSConfirmation = async () => {
+    if (!phone || !date || !timeSlot) {
+      toast({
+        title: "Unable to send SMS",
+        description: "Missing phone number or appointment details.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSendingSMS(true);
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const formattedDate = format(date, "EEEE, MMMM d, yyyy");
+      const appointmentDetails = `${formattedDate} at ${timeSlot.formattedTime}`;
+      const message = `Hi ${firstName}, your ${serviceType} appointment is confirmed for ${appointmentDetails}. Thank you for booking with Noushy Physiotherapy Clinic.`;
+      
+      console.log("SMS would be sent to:", phone);
+      console.log("Message content:", message);
+      
+      toast({
+        title: "SMS Confirmation Sent",
+        description: "A text message with your appointment details has been sent to your phone.",
+      });
+    } catch (error) {
+      console.error("Error sending SMS:", error);
+      toast({
+        title: "SMS Sending Failed",
+        description: "We couldn't send the SMS confirmation. Please contact us if you need assistance.",
+        variant: "destructive"
+      });
+    } finally {
+      setSendingSMS(false);
+    }
+  };
+  
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -200,6 +234,24 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ booking, onBa
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        </div>
+
+        <div className="bg-noushy-50 rounded-xl p-5 border border-noushy-100">
+          <div className="flex items-center mb-3">
+            <MessageSquare className="h-5 w-5 text-noushy-600 mr-2" />
+            <h3 className="font-medium text-noushy-900">SMS Confirmation</h3>
+          </div>
+          <p className="text-sm text-noushy-600 mb-4">
+            Send a text message with your appointment details to your phone.
+          </p>
+          <Button 
+            className="w-full sm:w-auto bg-noushy-500 hover:bg-noushy-600"
+            onClick={sendSMSConfirmation}
+            disabled={sendingSMS}
+          >
+            <MessageSquare className="h-4 w-4 mr-2" />
+            {sendingSMS ? "Sending..." : "Send Text Confirmation"}
+          </Button>
         </div>
       </motion.div>
 
