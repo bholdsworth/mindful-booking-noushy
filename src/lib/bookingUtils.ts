@@ -10,6 +10,17 @@ export type TimeSlot = {
   bufferTime: number; // Buffer time in minutes
 };
 
+export type TimeRange = {
+  start: string; // Format: "HH:mm", e.g. "08:00"
+  end: string; // Format: "HH:mm", e.g. "19:00"
+};
+
+export type DayAvailability = {
+  date: string; // Format: "yyyy-MM-dd"
+  available: boolean;
+  customTimeRange?: TimeRange;
+};
+
 export type BookingFormData = {
   firstName: string;
   lastName: string;
@@ -54,20 +65,24 @@ export const medicareCodes = [
   { code: "140", description: "Home Visit Treatment - 60 minutes" }
 ];
 
-const STORAGE_KEY = 'noushy-available-days';
-
-export const saveAvailableDays = (days: Date[]) => {
-  const daysToSave = days.map(day => format(day, 'yyyy-MM-dd'));
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(daysToSave));
+// Default time range for all days
+export const DEFAULT_TIME_RANGE: TimeRange = {
+  start: "08:00", // 8 AM
+  end: "19:00",   // 7 PM
 };
 
-export const getAvailableDays = (): Date[] => {
-  const savedDays = localStorage.getItem(STORAGE_KEY);
+const AVAILABILITY_STORAGE_KEY = 'noushy-available-days';
+
+export const saveAvailableDays = (daysAvailability: DayAvailability[]) => {
+  localStorage.setItem(AVAILABILITY_STORAGE_KEY, JSON.stringify(daysAvailability));
+};
+
+export const getAvailableDays = (): DayAvailability[] => {
+  const savedDays = localStorage.getItem(AVAILABILITY_STORAGE_KEY);
   if (!savedDays) return [];
   
   try {
-    const dateStrings = JSON.parse(savedDays) as string[];
-    return dateStrings.map(ds => new Date(ds));
+    return JSON.parse(savedDays) as DayAvailability[];
   } catch (e) {
     console.error('Error parsing available days:', e);
     return [];
@@ -75,10 +90,19 @@ export const getAvailableDays = (): Date[] => {
 };
 
 export const isDayAvailable = (day: Date): boolean => {
+  const dateStr = format(day, 'yyyy-MM-dd');
   const availableDays = getAvailableDays();
-  return availableDays.some(availableDay => 
-    isSameDay(new Date(availableDay), new Date(day))
-  );
+  const dayConfig = availableDays.find(d => d.date === dateStr);
+  
+  return dayConfig ? dayConfig.available : false;
+};
+
+export const getDayTimeRange = (day: Date): TimeRange => {
+  const dateStr = format(day, 'yyyy-MM-dd');
+  const availableDays = getAvailableDays();
+  const dayConfig = availableDays.find(d => d.date === dateStr);
+  
+  return dayConfig?.customTimeRange || DEFAULT_TIME_RANGE;
 };
 
 export const getAvailableDates = () => {
@@ -88,15 +112,17 @@ export const getAvailableDates = () => {
   const availableDays = getAvailableDays();
   
   // If no available days have been set by admin, return an empty array
-  // This is a change from the previous behavior which would return all weekdays
   if (availableDays.length === 0) {
     return dates;
   } 
   
   // Filter available days to only include those within the next month
-  availableDays.forEach(day => {
-    if ((isAfter(day, today) || isSameDay(day, today)) && isBefore(day, oneMonthAhead)) {
-      dates.push(day);
+  availableDays.forEach(dayConfig => {
+    if (dayConfig.available) {
+      const day = new Date(dayConfig.date);
+      if ((isAfter(day, today) || isSameDay(day, today)) && isBefore(day, oneMonthAhead)) {
+        dates.push(day);
+      }
     }
   });
   
@@ -109,33 +135,29 @@ export const isDateMoreThanMonthAhead = (date: Date): boolean => {
   return isAfter(date, oneMonthAhead);
 };
 
+export const parseTimeString = (timeStr: string): { hours: number, minutes: number } => {
+  const [hoursStr, minutesStr] = timeStr.split(':');
+  return { 
+    hours: parseInt(hoursStr, 10), 
+    minutes: parseInt(minutesStr, 10) 
+  };
+};
+
 export const getTimeSlots = (date: Date): TimeSlot[] => {
-  const morningStart = setHours(setMinutes(new Date(date), 30), 7); // 7:30 AM
-  const morningEnd = setHours(setMinutes(new Date(date), 0), 12);   // 12:00 PM
-  const afternoonStart = setHours(setMinutes(new Date(date), 0), 14); // 2:00 PM
-  const afternoonEnd = setHours(setMinutes(new Date(date), 0), 18);   // 6:00 PM
+  const timeRange = getDayTimeRange(date);
+  const { hours: startHours, minutes: startMinutes } = parseTimeString(timeRange.start);
+  const { hours: endHours, minutes: endMinutes } = parseTimeString(timeRange.end);
+  
+  const dayStart = setHours(setMinutes(new Date(date), startMinutes), startHours);
+  const dayEnd = setHours(setMinutes(new Date(date), endMinutes), endHours);
   
   const slots: TimeSlot[] = [];
   const slotDuration = 30; // 30 minutes per slot
   const bufferTime = 15; // 15 minutes buffer between appointments
   
-  let currentSlot = new Date(morningStart);
-  while (isBefore(currentSlot, morningEnd)) {
-    slots.push({
-      id: format(currentSlot, "yyyy-MM-dd-HH-mm"),
-      time: new Date(currentSlot),
-      formattedTime: format(currentSlot, "h:mm a"),
-      available: Math.random() > 0.3, // Randomly set availability (70% available)
-      duration: slotDuration,
-      bufferTime: bufferTime
-    });
-    
-    currentSlot = new Date(currentSlot);
-    currentSlot.setMinutes(currentSlot.getMinutes() + slotDuration + bufferTime);
-  }
+  let currentSlot = new Date(dayStart);
   
-  currentSlot = new Date(afternoonStart);
-  while (isBefore(currentSlot, afternoonEnd)) {
+  while (isBefore(currentSlot, dayEnd)) {
     slots.push({
       id: format(currentSlot, "yyyy-MM-dd-HH-mm"),
       time: new Date(currentSlot),

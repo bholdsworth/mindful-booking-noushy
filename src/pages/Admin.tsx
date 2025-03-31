@@ -7,52 +7,124 @@ import { toast } from "sonner";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { saveAvailableDays, getAvailableDays } from "@/lib/bookingUtils";
+import { 
+  saveAvailableDays, 
+  getAvailableDays, 
+  DayAvailability, 
+  TimeRange, 
+  DEFAULT_TIME_RANGE 
+} from "@/lib/bookingUtils";
+import { Clock } from "lucide-react";
 
 const Admin = () => {
   const [selectedDays, setSelectedDays] = useState<Date[]>([]);
+  const [availableDays, setAvailableDays] = useState<DayAvailability[]>([]);
+  const [editingDay, setEditingDay] = useState<DayAvailability | null>(null);
+  const [timeRange, setTimeRange] = useState<TimeRange>(DEFAULT_TIME_RANGE);
   const navigate = useNavigate();
 
   // Load saved available days on component mount
   useEffect(() => {
     const savedDays = getAvailableDays();
-    // Ensure all dates are proper Date objects
-    const normalizedDays = savedDays.map(day => new Date(day));
-    setSelectedDays(normalizedDays);
+    
+    // Convert string dates to Date objects for the calendar
+    const dates = savedDays
+      .filter(day => day.available)
+      .map(day => new Date(day.date));
+    
+    setAvailableDays(savedDays);
+    setSelectedDays(dates);
   }, []);
 
   // Handle day selection - modified to accept an array of dates
   const handleSelect = (days: Date[] | undefined) => {
     if (days) {
+      // Create a new array of available days
+      const newAvailableDays: DayAvailability[] = [];
+      
       // Normalize all dates to midnight to avoid time zone issues
-      const normalizedDays = days.map(day => {
+      const normalizedSelectedDays = days.map(day => {
         const normalized = new Date(day);
         normalized.setHours(0, 0, 0, 0);
         return normalized;
       });
-      setSelectedDays(normalizedDays);
+      
+      setSelectedDays(normalizedSelectedDays);
+      
+      // Convert available days to a map for easier lookup
+      const existingDaysMap = new Map<string, DayAvailability>();
+      availableDays.forEach(day => {
+        existingDaysMap.set(day.date, day);
+      });
+      
+      // Add selected days to the new available days list
+      normalizedSelectedDays.forEach(day => {
+        const dateStr = format(day, "yyyy-MM-dd");
+        const existingDay = existingDaysMap.get(dateStr);
+        
+        newAvailableDays.push({
+          date: dateStr,
+          available: true,
+          customTimeRange: existingDay?.customTimeRange
+        });
+        
+        // Remove from the map so we can collect unselected days later
+        existingDaysMap.delete(dateStr);
+      });
+      
+      // Add unselected days to the new available days list
+      existingDaysMap.forEach(day => {
+        newAvailableDays.push({
+          ...day,
+          available: false
+        });
+      });
+      
+      setAvailableDays(newAvailableDays);
     }
   };
 
   // Save available days
   const handleSave = () => {
-    // Ensure all dates are normalized to midnight
-    const normalizedDays = selectedDays.map(day => {
-      const normalized = new Date(day);
-      normalized.setHours(0, 0, 0, 0);
-      return normalized;
-    });
-    
-    saveAvailableDays(normalizedDays);
+    saveAvailableDays(availableDays);
     toast.success("Availability settings saved successfully!");
   };
 
+  // Open day settings
+  const handleEditDay = (day: DayAvailability) => {
+    setEditingDay(day);
+    setTimeRange(day.customTimeRange || DEFAULT_TIME_RANGE);
+  };
+
+  // Save day settings
+  const handleSaveDaySettings = () => {
+    if (!editingDay) return;
+
+    const updatedDays = availableDays.map(day => {
+      if (day.date === editingDay.date) {
+        return {
+          ...day,
+          customTimeRange: timeRange
+        };
+      }
+      return day;
+    });
+
+    setAvailableDays(updatedDays);
+    setEditingDay(null);
+    toast.success("Time range updated successfully!");
+  };
+
   // Format date for display in the UI
-  const formatDate = (date: Date) => {
-    // Create a new date object to avoid modifying the original
-    const displayDate = new Date(date);
+  const formatDate = (date: Date | string) => {
+    // If it's a string, convert to Date
+    const displayDate = typeof date === 'string' ? new Date(date) : new Date(date);
     return format(displayDate, "EEEE, MMMM d, yyyy");
   };
 
@@ -77,7 +149,7 @@ const Admin = () => {
           >
             <h1 className="text-3xl md:text-4xl font-bold text-noushy-900 mb-4">Admin Dashboard</h1>
             <p className="text-lg text-noushy-700">
-              Manage your available days for bookings.
+              Manage your available days and time ranges for bookings.
             </p>
           </motion.div>
           
@@ -126,22 +198,124 @@ const Admin = () => {
                       <ul className="space-y-2">
                         {selectedDays
                           .sort((a, b) => a.getTime() - b.getTime())
-                          .map((day, i) => (
-                            <li key={i} className="flex items-center justify-between p-2 rounded-md bg-noushy-50">
-                              <span>{formatDate(day)}</span>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="text-noushy-500 hover:text-noushy-700"
-                                onClick={() => {
-                                  const newSelectedDays = selectedDays.filter(d => !isSameDay(d, day));
-                                  setSelectedDays(newSelectedDays);
-                                }}
-                              >
-                                Remove
-                              </Button>
-                            </li>
-                          ))}
+                          .map((day, i) => {
+                            const dateStr = format(day, "yyyy-MM-dd");
+                            const dayConfig = availableDays.find(d => d.date === dateStr) || {
+                              date: dateStr,
+                              available: true
+                            };
+                            
+                            return (
+                              <li key={i} className="flex items-center justify-between p-2 rounded-md bg-noushy-50">
+                                <span>{formatDate(day)}</span>
+                                <div className="flex items-center gap-2">
+                                  <Sheet>
+                                    <SheetTrigger asChild>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="text-noushy-500 hover:text-noushy-700"
+                                        onClick={() => handleEditDay(dayConfig)}
+                                      >
+                                        <Clock className="h-4 w-4 mr-1" />
+                                        Time
+                                      </Button>
+                                    </SheetTrigger>
+                                    <SheetContent>
+                                      <SheetHeader>
+                                        <SheetTitle>Customize Time Range</SheetTitle>
+                                        <SheetDescription>
+                                          Set custom time availability for {formatDate(dayConfig.date)}
+                                        </SheetDescription>
+                                      </SheetHeader>
+                                      <div className="py-6 space-y-6">
+                                        <div className="space-y-4">
+                                          <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                              <Label htmlFor="custom-time-toggle">Use Custom Time Range:</Label>
+                                              <Switch 
+                                                id="custom-time-toggle" 
+                                                checked={!!timeRange}
+                                                onCheckedChange={(checked) => {
+                                                  if (checked) {
+                                                    setTimeRange(DEFAULT_TIME_RANGE);
+                                                  } else {
+                                                    setTimeRange({start: "", end: ""});
+                                                  }
+                                                }}
+                                              />
+                                            </div>
+                                            <p className="text-sm text-muted-foreground">
+                                              Default time range is 8:00 AM - 7:00 PM
+                                            </p>
+                                          </div>
+                                          
+                                          {timeRange && (
+                                            <div className="grid grid-cols-2 gap-4">
+                                              <div className="space-y-2">
+                                                <Label htmlFor="start-time">Start Time</Label>
+                                                <Input 
+                                                  id="start-time" 
+                                                  type="time" 
+                                                  value={timeRange.start} 
+                                                  onChange={(e) => setTimeRange(prev => ({
+                                                    ...prev,
+                                                    start: e.target.value
+                                                  }))}
+                                                />
+                                              </div>
+                                              <div className="space-y-2">
+                                                <Label htmlFor="end-time">End Time</Label>
+                                                <Input 
+                                                  id="end-time" 
+                                                  type="time" 
+                                                  value={timeRange.end} 
+                                                  onChange={(e) => setTimeRange(prev => ({
+                                                    ...prev,
+                                                    end: e.target.value
+                                                  }))}
+                                                />
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
+                                        
+                                        <div className="flex justify-end space-x-2">
+                                          <Button variant="outline" onClick={() => setEditingDay(null)}>
+                                            Cancel
+                                          </Button>
+                                          <Button onClick={handleSaveDaySettings}>
+                                            Save Settings
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </SheetContent>
+                                  </Sheet>
+                                  
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="text-noushy-500 hover:text-noushy-700"
+                                    onClick={() => {
+                                      const newSelectedDays = selectedDays.filter(d => !isSameDay(d, day));
+                                      setSelectedDays(newSelectedDays);
+                                      
+                                      const newAvailableDays = availableDays.map(d => {
+                                        if (d.date === format(day, "yyyy-MM-dd")) {
+                                          return { ...d, available: false };
+                                        }
+                                        return d;
+                                      });
+                                      
+                                      setAvailableDays(newAvailableDays);
+                                    }}
+                                  >
+                                    Remove
+                                  </Button>
+                                </div>
+                              </li>
+                            );
+                          })}
                       </ul>
                     ) : (
                       <div className="text-center py-4 text-noushy-500">
