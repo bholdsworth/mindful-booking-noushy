@@ -84,7 +84,7 @@ const Admin = () => {
                   <Calendar
                     mode="multiple"
                     selected={selectedDays}
-                    onSelect={(day) => handleSelect(day)}
+                    onSelect={handleSelect}
                     className="rounded-md border"
                     numberOfMonths={2}
                     disabled={{ before: new Date() }}
