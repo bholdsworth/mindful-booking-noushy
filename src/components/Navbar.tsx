@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Calendar, Menu, X } from "lucide-react";
+import { Calendar, Menu, X, Briefcase } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +25,10 @@ const Navbar = () => {
             <Link to="/booking" className="text-noushy-700 hover:text-noushy-900 font-medium">Book</Link>
             <Link to="/contact" className="text-noushy-700 hover:text-noushy-900 font-medium">Contact</Link>
             <Link to="/admin" className="text-noushy-700 hover:text-noushy-900 font-medium">Admin</Link>
+            <Link to="/management" className="text-noushy-700 hover:text-noushy-900 font-medium flex items-center">
+              <Briefcase className="mr-1 h-4 w-4" />
+              Management
+            </Link>
           </nav>
           
           {/* Right Section with Button */}
@@ -90,6 +94,14 @@ const Navbar = () => {
             onClick={() => setMobileMenuOpen(false)}
           >
             Admin
+          </Link>
+          <Link 
+            to="/management" 
+            className="text-noushy-700 hover:text-noushy-900 font-medium py-2 flex items-center"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <Briefcase className="mr-1 h-4 w-4" />
+            Management
           </Link>
           <Link to="/booking" onClick={() => setMobileMenuOpen(false)}>
             <Button className="bg-noushy-500 hover:bg-noushy-600 text-white w-full">
