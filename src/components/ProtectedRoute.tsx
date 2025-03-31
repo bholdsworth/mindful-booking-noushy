@@ -15,13 +15,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { isAuthenticated, isAdmin } = useAuth();
   const location = useLocation();
 
+  // If not authenticated, redirect to login page
   if (!isAuthenticated) {
-    // Redirect to login if not authenticated
+    // Store the current location they were trying to access
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // If admin access is required but user is not an admin, redirect to home
   if (requireAdmin && !isAdmin) {
-    // Redirect to home if admin access is required but user is not an admin
     return <Navigate to="/" replace />;
   }
 

@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Calendar, Menu, X, Briefcase, LogIn, LogOut } from "lucide-react";
+import { Calendar, Menu, X, Briefcase, LogOut } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -47,7 +47,8 @@ const Navbar = () => {
               </Button>
             </Link>
             
-            {isAuthenticated ? (
+            {/* Only show logout button if authenticated */}
+            {isAuthenticated && (
               <Button 
                 variant="outline" 
                 onClick={logout}
@@ -56,16 +57,6 @@ const Navbar = () => {
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
               </Button>
-            ) : (
-              <Link to="/login">
-                <Button 
-                  variant="outline"
-                  className="flex items-center"
-                >
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Login
-                </Button>
-              </Link>
             )}
           </div>
           
@@ -144,7 +135,8 @@ const Navbar = () => {
             </Button>
           </Link>
           
-          {isAuthenticated ? (
+          {/* Only show logout button in mobile menu if authenticated */}
+          {isAuthenticated && (
             <Button 
               variant="outline" 
               onClick={() => {
@@ -156,16 +148,6 @@ const Navbar = () => {
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </Button>
-          ) : (
-            <Link to="/login" className="w-full" onClick={() => setMobileMenuOpen(false)}>
-              <Button 
-                variant="outline"
-                className="flex items-center justify-center w-full"
-              >
-                <LogIn className="mr-2 h-4 w-4" />
-                Login
-              </Button>
-            </Link>
           )}
         </div>
       </div>
