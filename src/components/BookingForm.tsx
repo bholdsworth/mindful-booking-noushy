@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Clock, Check, FileText } from "lucide-react";
@@ -23,7 +22,8 @@ import {
   validateBookingData,
   serviceTypes,
   medicareCodes,
-  isDateMoreThanMonthAhead
+  isDateMoreThanMonthAhead,
+  isDayAvailable
 } from "@/lib/bookingUtils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -35,19 +35,25 @@ const BookingForm: React.FC = () => {
   const [confirmed, setConfirmed] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   
-  // Update form data
   const handleChange = (field: keyof BookingFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
   
-  // Handle date selection
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      // Check if date is more than a month ahead
       if (isDateMoreThanMonthAhead(date)) {
         toast({
           title: "Date not available",
           description: "Bookings can only be made up to one month in advance.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (!isDayAvailable(date)) {
+        toast({
+          title: "Date not available",
+          description: "The selected date is not available for booking.",
           variant: "destructive",
         });
         return;
@@ -60,16 +66,12 @@ const BookingForm: React.FC = () => {
     }
   };
   
-  // Handle time slot selection
   const handleTimeSlotSelect = (slot: TimeSlotType) => {
     handleChange("timeSlot", slot);
   };
   
-  // Handle tab change
   const handleTabChange = (value: string) => {
-    // Only check for date if transitioning from details to time
     if (value === "time" && currentTab === "details") {
-      // Validate that a date has been selected
       if (!formData.date) {
         toast({
           title: "Please select a date first",
@@ -81,8 +83,6 @@ const BookingForm: React.FC = () => {
     }
     
     if (value === "review") {
-      // Validate form data before going to review
-      // We're removing Medicare code validation since it's hidden from users
       const validationErrors = validateBookingData(formData, false);
       setErrors(validationErrors);
       
@@ -99,9 +99,7 @@ const BookingForm: React.FC = () => {
     setCurrentTab(value);
   };
   
-  // Handle form submission
   const handleSubmit = () => {
-    // We're removing Medicare code validation since it's hidden from users
     const validationErrors = validateBookingData(formData, false);
     setErrors(validationErrors);
     
@@ -114,13 +112,10 @@ const BookingForm: React.FC = () => {
       return;
     }
     
-    // Automatically set a default Medicare code for the therapist (first in the list)
     if (!formData.medicareCode && medicareCodes.length > 0) {
       handleChange("medicareCode", medicareCodes[0].code);
     }
     
-    // In a real application, you would submit the data to your backend here
-    // For now, we'll just show a success message
     toast({
       title: "Booking successful!",
       description: "Your appointment has been booked successfully.",
@@ -247,7 +242,6 @@ const BookingForm: React.FC = () => {
                     </Select>
                   </div>
                   
-                  {/* Date selection */}
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="date">Appointment Date</Label>
                     <Popover>
@@ -271,13 +265,11 @@ const BookingForm: React.FC = () => {
                           selected={formData.date}
                           onSelect={handleDateSelect}
                           disabled={(date) => {
-                            // Disable weekends, past dates, and dates more than a month ahead
                             const today = new Date();
                             today.setHours(0, 0, 0, 0);
                             return date < today || 
-                                   date.getDay() === 0 || 
-                                   date.getDay() === 6 ||
-                                   isDateMoreThanMonthAhead(date);
+                                   isDateMoreThanMonthAhead(date) ||
+                                   !isDayAvailable(date);
                           }}
                           initialFocus
                           className="p-3 pointer-events-auto"
@@ -285,7 +277,8 @@ const BookingForm: React.FC = () => {
                       </PopoverContent>
                     </Popover>
                     <p className="text-sm text-noushy-600 mt-1">
-                      Note: Bookings can only be made up to one month in advance.
+                      Note: Bookings can only be made on available days set by the administrator 
+                      and up to one month in advance.
                     </p>
                   </div>
                   
@@ -317,7 +310,6 @@ const BookingForm: React.FC = () => {
                 <h2 className="text-2xl font-semibold mb-6 text-noushy-900">Select Time</h2>
                 
                 <div className="space-y-4">
-                  {/* Selected date display */}
                   <div className="bg-noushy-50 p-4 rounded-lg mb-6">
                     <div className="flex items-center">
                       <CalendarIcon className="h-5 w-5 text-noushy-600 mr-2" />
@@ -421,7 +413,6 @@ const BookingForm: React.FC = () => {
                         <span className="text-noushy-600">Service:</span>
                         <span className="text-noushy-900 font-medium">{formData.serviceType}</span>
                       </div>
-                      {/* Medicare code has been removed from the user review */}
                     </div>
                   </div>
                   

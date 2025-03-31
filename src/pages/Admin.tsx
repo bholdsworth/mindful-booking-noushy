@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -18,20 +18,49 @@ const Admin = () => {
   // Load saved available days on component mount
   useEffect(() => {
     const savedDays = getAvailableDays();
-    setSelectedDays(savedDays);
+    // Ensure all dates are proper Date objects
+    const normalizedDays = savedDays.map(day => new Date(day));
+    setSelectedDays(normalizedDays);
   }, []);
 
   // Handle day selection - modified to accept an array of dates
   const handleSelect = (days: Date[] | undefined) => {
     if (days) {
-      setSelectedDays(days);
+      // Normalize all dates to midnight to avoid time zone issues
+      const normalizedDays = days.map(day => {
+        const normalized = new Date(day);
+        normalized.setHours(0, 0, 0, 0);
+        return normalized;
+      });
+      setSelectedDays(normalizedDays);
     }
   };
 
   // Save available days
   const handleSave = () => {
-    saveAvailableDays(selectedDays);
+    // Ensure all dates are normalized to midnight
+    const normalizedDays = selectedDays.map(day => {
+      const normalized = new Date(day);
+      normalized.setHours(0, 0, 0, 0);
+      return normalized;
+    });
+    
+    saveAvailableDays(normalizedDays);
     toast.success("Availability settings saved successfully!");
+  };
+
+  // Format date for display in the UI
+  const formatDate = (date: Date) => {
+    // Create a new date object to avoid modifying the original
+    const displayDate = new Date(date);
+    return format(displayDate, "EEEE, MMMM d, yyyy");
+  };
+
+  // Check if two dates are the same day (regardless of time)
+  const isSameDay = (date1: Date, date2: Date) => {
+    return date1.getDate() === date2.getDate() && 
+           date1.getMonth() === date2.getMonth() && 
+           date1.getFullYear() === date2.getFullYear();
   };
 
   return (
@@ -99,17 +128,13 @@ const Admin = () => {
                           .sort((a, b) => a.getTime() - b.getTime())
                           .map((day, i) => (
                             <li key={i} className="flex items-center justify-between p-2 rounded-md bg-noushy-50">
-                              <span>{format(day, "EEEE, MMMM d, yyyy")}</span>
+                              <span>{formatDate(day)}</span>
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
                                 className="text-noushy-500 hover:text-noushy-700"
                                 onClick={() => {
-                                  const newSelectedDays = selectedDays.filter(d => 
-                                    d.getDate() !== day.getDate() || 
-                                    d.getMonth() !== day.getMonth() || 
-                                    d.getFullYear() !== day.getFullYear()
-                                  );
+                                  const newSelectedDays = selectedDays.filter(d => !isSameDay(d, day));
                                   setSelectedDays(newSelectedDays);
                                 }}
                               >

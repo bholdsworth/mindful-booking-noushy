@@ -1,3 +1,4 @@
+
 import { addDays, format, isWeekend, setHours, setMinutes, isBefore, isAfter, isSameDay, addMonths } from "date-fns";
 
 export type TimeSlot = {
@@ -75,7 +76,9 @@ export const getAvailableDays = (): Date[] => {
 
 export const isDayAvailable = (day: Date): boolean => {
   const availableDays = getAvailableDays();
-  return availableDays.some(availableDay => isSameDay(availableDay, day));
+  return availableDays.some(availableDay => 
+    isSameDay(new Date(availableDay), new Date(day))
+  );
 };
 
 export const getAvailableDates = () => {
@@ -84,20 +87,18 @@ export const getAvailableDates = () => {
   const oneMonthAhead = addMonths(today, 1);
   const availableDays = getAvailableDays();
   
+  // If no available days have been set by admin, return an empty array
+  // This is a change from the previous behavior which would return all weekdays
   if (availableDays.length === 0) {
-    for (let i = 0; i < 30; i++) {
-      const date = addDays(today, i);
-      if (!isWeekend(date) && isBefore(date, oneMonthAhead)) {
-        dates.push(date);
-      }
+    return dates;
+  } 
+  
+  // Filter available days to only include those within the next month
+  availableDays.forEach(day => {
+    if ((isAfter(day, today) || isSameDay(day, today)) && isBefore(day, oneMonthAhead)) {
+      dates.push(day);
     }
-  } else {
-    availableDays.forEach(day => {
-      if ((isAfter(day, today) || isSameDay(day, today)) && isBefore(day, oneMonthAhead)) {
-        dates.push(day);
-      }
-    });
-  }
+  });
   
   return dates;
 };
