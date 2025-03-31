@@ -33,6 +33,16 @@ export type BookingFormData = {
   notes: string;
 };
 
+export type CalendarType = 'google' | 'outlook' | 'apple' | 'ics';
+
+export type CalendarEventProps = {
+  title: string;
+  description: string;
+  startTime: Date;
+  endTime: Date;
+  location: string;
+};
+
 export const initialBookingData: BookingFormData = {
   firstName: "",
   lastName: "",
@@ -197,4 +207,60 @@ export const validateBookingData = (data: BookingFormData, validateMedicareCode:
   if (validateMedicareCode && !data.medicareCode) errors.push("Medicare code is required");
   
   return errors;
+};
+
+// Calendar integration functions
+export const generateCalendarLinks = ({
+  title,
+  description,
+  startTime,
+  endTime,
+  location
+}: CalendarEventProps): Record<CalendarType, string> => {
+  // Format dates for calendar URLs
+  const startIso = startTime.toISOString().replace(/-|:|\.\d+/g, '');
+  const endIso = endTime.toISOString().replace(/-|:|\.\d+/g, '');
+  
+  // Format dates for .ics file
+  const formatDateForIcs = (date: Date) => {
+    return date.toISOString().replace(/-|:|\.\d+/g, '').substring(0, 15) + 'Z';
+  };
+  
+  const startIcs = formatDateForIcs(startTime);
+  const endIcs = formatDateForIcs(endTime);
+  
+  // Encode parameters for URLs
+  const encodedTitle = encodeURIComponent(title);
+  const encodedDesc = encodeURIComponent(description);
+  const encodedLocation = encodeURIComponent(location);
+  
+  // Create Google Calendar link
+  const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodedTitle}&dates=${startIso}/${endIso}&details=${encodedDesc}&location=${encodedLocation}&sf=true&output=xml`;
+  
+  // Create Outlook Web link
+  const outlookUrl = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${encodedTitle}&startdt=${startTime.toISOString()}&enddt=${endTime.toISOString()}&body=${encodedDesc}&location=${encodedLocation}`;
+  
+  // Create Apple Calendar link (.ics file approach)
+  const icsContent = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'BEGIN:VEVENT',
+    `DTSTART:${startIcs}`,
+    `DTEND:${endIcs}`,
+    `SUMMARY:${title}`,
+    `DESCRIPTION:${description}`,
+    `LOCATION:${location}`,
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\n');
+  
+  const icsBlob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+  const icsUrl = URL.createObjectURL(icsBlob);
+  
+  return {
+    google: googleUrl,
+    outlook: outlookUrl,
+    apple: icsUrl,  // Same as ICS for Apple
+    ics: icsUrl
+  };
 };
