@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { 
@@ -608,36 +609,38 @@ const Invoicing = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <TabsList>
-                  <TabsTrigger 
-                    value="all" 
-                    onClick={() => setStatusFilter("all")} 
-                    className={statusFilter === "all" ? "bg-slate-50" : ""}
-                  >
-                    All
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="pending" 
-                    onClick={() => setStatusFilter("pending")}
-                    className={statusFilter === "pending" ? "bg-slate-50" : ""}
-                  >
-                    Pending
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="paid" 
-                    onClick={() => setStatusFilter("paid")}
-                    className={statusFilter === "paid" ? "bg-slate-50" : ""}
-                  >
-                    Paid
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="overdue" 
-                    onClick={() => setStatusFilter("overdue")}
-                    className={statusFilter === "overdue" ? "bg-slate-50" : ""}
-                  >
-                    Overdue
-                  </TabsTrigger>
-                </TabsList>
+                <Tabs defaultValue="all">
+                  <TabsList>
+                    <TabsTrigger 
+                      value="all" 
+                      onClick={() => setStatusFilter("all")} 
+                      className={statusFilter === "all" ? "bg-slate-50" : ""}
+                    >
+                      All
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="pending" 
+                      onClick={() => setStatusFilter("pending")}
+                      className={statusFilter === "pending" ? "bg-slate-50" : ""}
+                    >
+                      Pending
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="paid" 
+                      onClick={() => setStatusFilter("paid")}
+                      className={statusFilter === "paid" ? "bg-slate-50" : ""}
+                    >
+                      Paid
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="overdue" 
+                      onClick={() => setStatusFilter("overdue")}
+                      className={statusFilter === "overdue" ? "bg-slate-50" : ""}
+                    >
+                      Overdue
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
                 <Button variant="outline">
                   <Download className="mr-2 h-4 w-4" />
                   Export
