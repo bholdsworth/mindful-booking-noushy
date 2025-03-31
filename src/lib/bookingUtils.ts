@@ -1,5 +1,5 @@
 
-import { addDays, format, isWeekend, setHours, setMinutes, isBefore, isAfter, isSameDay } from "date-fns";
+import { addDays, format, isWeekend, setHours, setMinutes, isBefore, isAfter, isSameDay, addMonths } from "date-fns";
 
 export type TimeSlot = {
   id: string;
@@ -81,30 +81,38 @@ export const isDayAvailable = (day: Date): boolean => {
   return availableDays.some(availableDay => isSameDay(availableDay, day));
 };
 
-// Generate available dates (next 30 days, filtered by admin selection)
+// Generate available dates (up to 1 month ahead, filtered by admin selection)
 export const getAvailableDates = () => {
   const dates: Date[] = [];
   const today = new Date();
+  const oneMonthAhead = addMonths(today, 1);
   const availableDays = getAvailableDays();
   
-  // If no admin-selected days, fall back to weekdays
+  // If no admin-selected days, fall back to weekdays within the next month
   if (availableDays.length === 0) {
     for (let i = 0; i < 30; i++) {
       const date = addDays(today, i);
-      if (!isWeekend(date)) {
+      if (!isWeekend(date) && isBefore(date, oneMonthAhead)) {
         dates.push(date);
       }
     }
   } else {
-    // Filter future available days
+    // Filter future available days within one month
     availableDays.forEach(day => {
-      if (isAfter(day, today) || isSameDay(day, today)) {
+      if ((isAfter(day, today) || isSameDay(day, today)) && isBefore(day, oneMonthAhead)) {
         dates.push(day);
       }
     });
   }
   
   return dates;
+};
+
+// Check if a date is more than a month ahead
+export const isDateMoreThanMonthAhead = (date: Date): boolean => {
+  const today = new Date();
+  const oneMonthAhead = addMonths(today, 1);
+  return isAfter(date, oneMonthAhead);
 };
 
 // Generate time slots for a specific date

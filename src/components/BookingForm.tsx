@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Clock, Check, FileText } from "lucide-react";
@@ -21,7 +22,8 @@ import {
   getTimeSlots,
   validateBookingData,
   serviceTypes,
-  medicareCodes
+  medicareCodes,
+  isDateMoreThanMonthAhead
 } from "@/lib/bookingUtils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -41,6 +43,16 @@ const BookingForm: React.FC = () => {
   // Handle date selection
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
+      // Check if date is more than a month ahead
+      if (isDateMoreThanMonthAhead(date)) {
+        toast({
+          title: "Date not available",
+          description: "Bookings can only be made up to one month in advance.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       handleChange("date", date);
       const slots = getTimeSlots(date);
       setTimeSlots(slots);
@@ -235,9 +247,7 @@ const BookingForm: React.FC = () => {
                     </Select>
                   </div>
                   
-                  {/* Medicare code field has been removed from the user-facing form */}
-                  
-                  {/* Date selection added to details tab */}
+                  {/* Date selection */}
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="date">Appointment Date</Label>
                     <Popover>
@@ -261,16 +271,22 @@ const BookingForm: React.FC = () => {
                           selected={formData.date}
                           onSelect={handleDateSelect}
                           disabled={(date) => {
-                            // Disable weekends and past dates
+                            // Disable weekends, past dates, and dates more than a month ahead
                             const today = new Date();
                             today.setHours(0, 0, 0, 0);
-                            return date < today || date.getDay() === 0 || date.getDay() === 6;
+                            return date < today || 
+                                   date.getDay() === 0 || 
+                                   date.getDay() === 6 ||
+                                   isDateMoreThanMonthAhead(date);
                           }}
                           initialFocus
                           className="p-3 pointer-events-auto"
                         />
                       </PopoverContent>
                     </Popover>
+                    <p className="text-sm text-noushy-600 mt-1">
+                      Note: Bookings can only be made up to one month in advance.
+                    </p>
                   </div>
                   
                   <div className="space-y-2 md:col-span-2">
