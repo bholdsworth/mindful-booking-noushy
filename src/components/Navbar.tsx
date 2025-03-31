@@ -21,7 +21,9 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-noushy-700 hover:text-noushy-900 font-medium">Home</Link>
+            <Link to="/about" className="text-noushy-700 hover:text-noushy-900 font-medium">About</Link>
             <Link to="/booking" className="text-noushy-700 hover:text-noushy-900 font-medium">Book</Link>
+            <Link to="/contact" className="text-noushy-700 hover:text-noushy-900 font-medium">Contact</Link>
             <Link to="/admin" className="text-noushy-700 hover:text-noushy-900 font-medium">Admin</Link>
           </nav>
           
@@ -62,11 +64,25 @@ const Navbar = () => {
             Home
           </Link>
           <Link 
+            to="/about" 
+            className="text-noushy-700 hover:text-noushy-900 font-medium py-2"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            About
+          </Link>
+          <Link 
             to="/booking" 
             className="text-noushy-700 hover:text-noushy-900 font-medium py-2"
             onClick={() => setMobileMenuOpen(false)}
           >
             Book
+          </Link>
+          <Link 
+            to="/contact" 
+            className="text-noushy-700 hover:text-noushy-900 font-medium py-2"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Contact
           </Link>
           <Link 
             to="/admin" 
