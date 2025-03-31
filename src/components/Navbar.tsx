@@ -1,12 +1,14 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Calendar, Menu, X, Briefcase } from "lucide-react";
+import { Calendar, Menu, X, Briefcase, LogIn, LogOut } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isAuthenticated, isAdmin, logout } = useAuth();
   
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-noushy-100">
@@ -24,11 +26,16 @@ const Navbar = () => {
             <Link to="/about" className="text-noushy-700 hover:text-noushy-900 font-medium">About</Link>
             <Link to="/booking" className="text-noushy-700 hover:text-noushy-900 font-medium">Book</Link>
             <Link to="/contact" className="text-noushy-700 hover:text-noushy-900 font-medium">Contact</Link>
-            <Link to="/admin" className="text-noushy-700 hover:text-noushy-900 font-medium">Admin</Link>
-            <Link to="/management" className="text-noushy-700 hover:text-noushy-900 font-medium flex items-center">
-              <Briefcase className="mr-1 h-4 w-4" />
-              Management
-            </Link>
+            
+            {isAdmin && (
+              <>
+                <Link to="/admin" className="text-noushy-700 hover:text-noushy-900 font-medium">Admin</Link>
+                <Link to="/management" className="text-noushy-700 hover:text-noushy-900 font-medium flex items-center">
+                  <Briefcase className="mr-1 h-4 w-4" />
+                  Management
+                </Link>
+              </>
+            )}
           </nav>
           
           {/* Right Section with Button */}
@@ -39,6 +46,27 @@ const Navbar = () => {
                 Book Now
               </Button>
             </Link>
+            
+            {isAuthenticated ? (
+              <Button 
+                variant="outline" 
+                onClick={logout}
+                className="flex items-center"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            ) : (
+              <Link to="/login">
+                <Button 
+                  variant="outline"
+                  className="flex items-center"
+                >
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Login
+                </Button>
+              </Link>
+            )}
           </div>
           
           {/* Mobile Menu Button */}
@@ -88,27 +116,57 @@ const Navbar = () => {
           >
             Contact
           </Link>
-          <Link 
-            to="/admin" 
-            className="text-noushy-700 hover:text-noushy-900 font-medium py-2"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Admin
-          </Link>
-          <Link 
-            to="/management" 
-            className="text-noushy-700 hover:text-noushy-900 font-medium py-2 flex items-center"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            <Briefcase className="mr-1 h-4 w-4" />
-            Management
-          </Link>
+          
+          {isAdmin && (
+            <>
+              <Link 
+                to="/admin" 
+                className="text-noushy-700 hover:text-noushy-900 font-medium py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Admin
+              </Link>
+              <Link 
+                to="/management" 
+                className="text-noushy-700 hover:text-noushy-900 font-medium py-2 flex items-center"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Briefcase className="mr-1 h-4 w-4" />
+                Management
+              </Link>
+            </>
+          )}
+          
           <Link to="/booking" onClick={() => setMobileMenuOpen(false)}>
             <Button className="bg-noushy-500 hover:bg-noushy-600 text-white w-full">
               <Calendar className="mr-2 h-4 w-4" />
               Book Now
             </Button>
           </Link>
+          
+          {isAuthenticated ? (
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                logout();
+                setMobileMenuOpen(false);
+              }}
+              className="flex items-center justify-center w-full"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+          ) : (
+            <Link to="/login" className="w-full" onClick={() => setMobileMenuOpen(false)}>
+              <Button 
+                variant="outline"
+                className="flex items-center justify-center w-full"
+              >
+                <LogIn className="mr-2 h-4 w-4" />
+                Login
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </header>

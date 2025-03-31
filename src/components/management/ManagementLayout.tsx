@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 
 interface ManagementLayoutProps {
   children: React.ReactNode;
@@ -21,10 +22,18 @@ interface ManagementLayoutProps {
 
 const ManagementLayout: React.FC<ManagementLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
+  const { logout, isAdmin } = useAuth();
   
-  // Mock function for logging out - would connect to auth system in real implementation
+  // Redirect if not an admin
+  useEffect(() => {
+    if (!isAdmin) {
+      navigate("/");
+    }
+  }, [isAdmin, navigate]);
+  
+  // Handle logout
   const handleLogout = () => {
-    // Add actual logout logic here
+    logout();
     navigate("/");
   };
 
@@ -37,6 +46,11 @@ const ManagementLayout: React.FC<ManagementLayoutProps> = ({ children }) => {
     { to: "/management/practitioners", icon: UserCog, label: "Practitioners" },
     { to: "/management/settings", icon: Settings, label: "Settings" },
   ];
+
+  // If not an admin, don't render the management layout
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-50">
