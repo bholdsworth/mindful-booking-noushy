@@ -320,17 +320,19 @@ const CalendarView = () => {
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
-                  <TabsList>
-                    <TabsTrigger value="day" onClick={() => setView("day")}>Day</TabsTrigger>
-                    <TabsTrigger value="week" onClick={() => setView("week")}>Week</TabsTrigger>
-                    <TabsTrigger value="month" onClick={() => setView("month")}>Month</TabsTrigger>
-                  </TabsList>
+                  {/* Move TabsList inside the Tabs component below */}
                 </div>
               </div>
             </CardHeader>
             <Separator />
             <CardContent className="p-0">
               <Tabs value={view} className="w-full">
+                <TabsList className="mb-2 mt-2 ml-2">
+                  <TabsTrigger value="day" onClick={() => setView("day")}>Day</TabsTrigger>
+                  <TabsTrigger value="week" onClick={() => setView("week")}>Week</TabsTrigger>
+                  <TabsTrigger value="month" onClick={() => setView("month")}>Month</TabsTrigger>
+                </TabsList>
+                
                 {/* Day View */}
                 <TabsContent value="day" className="w-full m-0">
                   <div className="overflow-auto">
